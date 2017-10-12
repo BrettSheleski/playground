@@ -92,10 +92,8 @@ namespace Calculator.UWP
                 {
                     ((calc.IBinaryOperation)CurrentOperation).Operand2 = GetOperandValue();
                 }
-
-                this.Calculator.Operation = CurrentOperation;
-
-                this.Calculator.Execute();
+                
+                this.Calculator.Execute(CurrentOperation);
 
                 if (Calculator.Result.Succeeded)
                 {

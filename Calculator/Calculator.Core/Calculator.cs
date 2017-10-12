@@ -8,15 +8,7 @@ using System.Threading.Tasks;
 namespace Calculator.Core
 {
     public class Calculator : INotifyPropertyChanged
-    {
-        private IOperation _operation;
-
-        public IOperation Operation
-        {
-            get { return _operation; }
-            set { _operation = value; OnPropertyChanged(); }
-        }
-        
+    {   
         private OperationResult _result;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -28,14 +20,14 @@ namespace Calculator.Core
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         
-        public void Execute()
+        public void Execute(IOperation operation)
         {
-            this.Result = Operation?.Execute();
+            this.Result = operation?.Execute();
         }
         
-        public async Task ExecuteAsync()
+        public async Task ExecuteAsync(IOperation operation)
         {
-            this.Result = await Operation?.ExecuteAsync();
+            this.Result = await operation?.ExecuteAsync();
         }
     }
 }
