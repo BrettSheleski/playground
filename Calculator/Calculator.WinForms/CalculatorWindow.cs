@@ -18,7 +18,7 @@ namespace Calculator.WinForms
         {
             InitializeComponent();
 
-            ClearEntryButton.Click+=
+            
         }
 
         calc.IUnaryOperation PercentOperation { get; } = new ops.UnaryFuncOperation(d => d / 100.0);
