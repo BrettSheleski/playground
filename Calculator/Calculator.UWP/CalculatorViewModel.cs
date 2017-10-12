@@ -1,5 +1,5 @@
 ﻿using calc = Calculator.Core;
-using ops =  Calculator.Operations;
+using ops = Calculator.Operations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,48 +28,119 @@ namespace Calculator.UWP
             OnCommand = new Command(On);
         }
 
+        void SetOperation(calc.IBinaryOperation operation)
+        {
+            ExecutePendingOperation();
+            
+            if (!string.IsNullOrWhiteSpace(DisplayText))
+            {
+                if (operation == CurrentOperation)
+                {
+                    operation.Operand2 = GetOperandValue();
+                }
+                else
+                {
+                    operation.Operand1 = GetOperandValue();
+                }
+                
+            }
+
+            CurrentOperation = operation;
+
+            this.ResetTextOnEntry = true;
+        }
+
+        void SetOperation(calc.IUnaryOperation operation)
+        {
+            ExecutePendingOperation();
+
+            if (!string.IsNullOrWhiteSpace(DisplayText))
+            {
+                operation.Operand = GetOperandValue();
+            }
+
+            CurrentOperation = operation;
+
+            this.ResetTextOnEntry = true;
+
+            Execute();
+        }
+
+        void SetOperation(calc.IOperation operation)
+        {
+            ExecutePendingOperation();
+            
+            CurrentOperation = operation;
+
+            this.ResetTextOnEntry = true;
+
+            Execute();
+        }
+
         private void On()
         {
-            throw new NotImplementedException();
+            SetOperation(OnOperation);
         }
+
+        calc.IOperation _previousOperation = null;
 
         private void Execute()
         {
-            this.Calculator.Execute();
-
-            if (Calculator.Result.Succeeded)
+            if (CurrentOperation != null)
             {
-                this.DisplayText = Calculator.Result.Value.ToString();
+                if (CurrentOperation is calc.IBinaryOperation)
+                {
+                    ((calc.IBinaryOperation)CurrentOperation).Operand2 = GetOperandValue();
+                }
+
+                this.Calculator.Operation = CurrentOperation;
+
+                this.Calculator.Execute();
+
+                if (Calculator.Result.Succeeded)
+                {
+                    this.DisplayText = Calculator.Result.Value.ToString();
+                }
+
+                _previousOperation = CurrentOperation;
+                CurrentOperation = null;
+            }
+        }
+
+        void ExecutePendingOperation()
+        {
+            if (CurrentOperation != null)
+            {
+                Execute();
             }
         }
 
         private void Plus()
         {
-            throw new NotImplementedException();
+            SetOperation(PlusOperation);
         }
 
         private void Subtract()
         {
-            throw new NotImplementedException();
+            SetOperation(SubtractOperation);
         }
 
         private void Multiply()
         {
-            throw new NotImplementedException();
+            SetOperation(MultiplyOperation);
         }
 
         private void Divide()
         {
-            throw new NotImplementedException();
+            SetOperation(DivideOperation);
         }
+
+        calc.IOperation _currentOperation;
 
         private void Percent()
         {
-            PercentOperation.Operand = GetOperandValue();
-
-            Calculator.Operation = PercentOperation;
-
-            Execute();
+            SetOperation(PercentOperation);
+            
         }
 
         private double GetOperandValue()
@@ -79,21 +150,27 @@ namespace Calculator.UWP
 
         private void PlusMinus()
         {
-            throw new NotImplementedException();
+            SetOperation(PlusMinusOperation);
         }
 
         private void Off()
         {
-            throw new NotImplementedException();
+            SetOperation(OffOperation);
         }
 
         private void ClearEntry()
         {
-            throw new NotImplementedException();
+            SetOperation(OnOperation);
         }
 
         private void UserEntry(string value)
         {
+            if (ResetTextOnEntry)
+            {
+                ResetTextOnEntry = false;
+                DisplayText = "";
+            }
+
             DisplayText += value;
         }
 
@@ -115,5 +192,16 @@ namespace Calculator.UWP
         public Command OnCommand { get; }
 
         calc.IUnaryOperation PercentOperation { get; } = new ops.UnaryFuncOperation(d => d / 100.0);
+        calc.IOperation OnOperation { get; } = new ops.ClearOperation();
+        calc.IUnaryOperation PlusMinusOperation { get; } = new ops.UnaryFuncOperation(d => d * -1);
+        calc.IOperation OffOperation { get { return OnOperation; } }
+        calc.IBinaryOperation DivideOperation { get; } = new ops.BinaryFuncOperation((a, b) => a / b);
+        calc.IBinaryOperation MultiplyOperation { get; } = new ops.BinaryFuncOperation((a, b) => a * b);
+        calc.IBinaryOperation SubtractOperation { get; } = new ops.BinaryFuncOperation((a, b) => a - b);
+        calc.IBinaryOperation PlusOperation { get; } = new ops.BinaryFuncOperation((a, b) => a + b);
+
+
+        public calc.IOperation CurrentOperation { get => _currentOperation; set => _currentOperation = value; }
+        public bool ResetTextOnEntry { get; private set; }
     }
 }
