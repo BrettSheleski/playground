@@ -30,7 +30,7 @@ namespace Calculator.Core
         
         public void Execute()
         {
-            Task.Run(ExecuteAsync);
+            this.Result = Operation?.Execute();
         }
         
         public async Task ExecuteAsync()
